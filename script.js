@@ -19,11 +19,12 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     });
 });
 
-// Form submission handler - VERSIÓN SIMPLIFICADA
+// Form submission handler - VERSIÓN CORREGIDA
 document.getElementById('contact-form').addEventListener('submit', function(e) {
     e.preventDefault();
     
     const form = this;
+    const formData = new FormData(form);
     const messageDiv = document.getElementById('form-message');
     
     // Mostrar estado de carga
@@ -32,45 +33,56 @@ document.getElementById('contact-form').addEventListener('submit', function(e) {
     submitButton.textContent = 'Enviando...';
     submitButton.disabled = true;
     
+    // Convertir FormData a objeto JSON
+    const formObject = {};
+    formData.forEach((value, key) => {
+        formObject[key] = value;
+    });
+    
+    console.log('Datos a enviar:', formObject);
+    
     // URL de tu Google Script
     const scriptURL = 'https://script.google.com/macros/s/AKfycbzq-HrMUdAPZoVpEUZE-3b7neEhBGjGxUpaYgN0zS2PZ9BfysKMNisz-gJED76Goko/exec';
     
-    // Crear formulario dinámico para enviar
-    const tempForm = document.createElement('form');
-    tempForm.method = 'POST';
-    tempForm.action = scriptURL;
-    tempForm.style.display = 'none';
-    
-    // Añadir campos al formulario
-    const fields = ['name', 'email', 'subject', 'message'];
-    fields.forEach(field => {
-        const input = document.createElement('input');
-        input.name = field;
-        input.value = form.querySelector(`[name="${field}"]`).value;
-        tempForm.appendChild(input);
-    });
-    
-    // Añadir formulario al documento y enviar
-    document.body.appendChild(tempForm);
-    tempForm.submit();
-    
-    // Mostrar mensaje de éxito (asumimos que funciona)
-    messageDiv.textContent = '¡Mensaje enviado con éxito! Te contactaremos pronto.';
-    messageDiv.className = 'form-message success';
-    form.reset();
-    
-    // Restaurar estado del botón después de un delay
-    setTimeout(() => {
+    // Enviar datos al Google Script
+    fetch(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify(formObject),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        console.log('Respuesta HTTP:', response.status, response.statusText);
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Respuesta del servidor:', data);
+        if (data.result === 'success') {
+            messageDiv.textContent = '¡Mensaje enviado con éxito! Te contactaremos pronto.';
+            messageDiv.className = 'form-message success';
+            form.reset();
+        } else {
+            throw new Error(data.message || 'Error del servidor');
+        }
+    })
+    .catch(error => {
+        console.error('Error completo:', error);
+        messageDiv.textContent = `Error: ${error.message}`;
+        messageDiv.className = 'form-message error';
+    })
+    .finally(() => {
         submitButton.textContent = originalText;
         submitButton.disabled = false;
-        document.body.removeChild(tempForm);
         
-        // Ocultar mensaje después de 8 segundos
         setTimeout(() => {
             messageDiv.textContent = '';
             messageDiv.className = 'form-message';
         }, 8000);
-    }, 1000);
+    });
 });
 
 // Header background on scroll
