@@ -1,6 +1,9 @@
 # cartas_de_alias_web
 
-accesible desde
+código en
+[https://github.com/fjvico/cartas_de_alias_web/blob/main/README.md](https://github.com/fjvico/cartas_de_alias_web/blob/main/README.md)
+
+web accesible en
 [https://fjvico.github.io/cartas_chatgpt/](https://fjvico.github.io/cartas_chatgpt/)
 
 script de Google y datasheet en
