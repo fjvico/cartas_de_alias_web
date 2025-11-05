@@ -19,7 +19,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     });
 });
 
-// Form submission handler - CÓDIGO ACTUALIZADO
+// Form submission handler
 document.getElementById('contact-form').addEventListener('submit', function(e) {
     e.preventDefault();
     
@@ -39,7 +39,7 @@ document.getElementById('contact-form').addEventListener('submit', function(e) {
         formObject[key] = value;
     });
     
-    // URL de tu Google Script - REEMPLAZA CON TU URL REAL
+    // URL de tu Google Script
     const scriptURL = 'https://script.google.com/macros/s/AKfycbzq-HrMUdAPZoVpEUZE-3b7neEhBGjGxUpaYgN0zS2PZ9BfysKMNisz-gJED76Goko/exec';
     
     // Enviar datos al Google Script
