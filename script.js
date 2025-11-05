@@ -39,9 +39,9 @@ document.getElementById('contact-form').addEventListener('submit', async functio
     formData.append('subject', form.querySelector('[name="subject"]').value);
     formData.append('message', form.querySelector('[name="message"]').value);
     
-    // URL de tu Google Apps Script
+    // URL de Google Apps Script
     const scriptURL = 'https://script.google.com/macros/s/AKfycbzbZZIQlGwaOjRWs0tYPSCazXIgdGrtnExTmVjvVqdpuTpxGk8DM8_uM8r2NU8K6lI/exec';
-
+    
     try {
         await fetch(scriptURL, {
             method: 'POST',
