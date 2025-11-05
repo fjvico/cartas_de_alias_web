@@ -19,12 +19,11 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     });
 });
 
-// Form submission handler - VERSIÓN CORREGIDA
+// Form submission handler - VERSIÓN SIMPLIFICADA
 document.getElementById('contact-form').addEventListener('submit', function(e) {
     e.preventDefault();
     
     const form = this;
-    const formData = new FormData(form);
     const messageDiv = document.getElementById('form-message');
     
     // Mostrar estado de carga
@@ -33,52 +32,45 @@ document.getElementById('contact-form').addEventListener('submit', function(e) {
     submitButton.textContent = 'Enviando...';
     submitButton.disabled = true;
     
-    // Convertir FormData a URL encoded (en lugar de JSON)
-    const formObject = {};
-    formData.forEach((value, key) => {
-        formObject[key] = value;
-    });
-    
     // URL de tu Google Script
     const scriptURL = 'https://script.google.com/macros/s/AKfycbzq-HrMUdAPZoVpEUZE-3b7neEhBGjGxUpaYgN0zS2PZ9BfysKMNisz-gJED76Goko/exec';
     
-    // Crear datos en formato URL encoded
-    const urlEncodedData = new URLSearchParams();
-    for (const key in formObject) {
-        urlEncodedData.append(key, formObject[key]);
-    }
+    // Crear formulario dinámico para enviar
+    const tempForm = document.createElement('form');
+    tempForm.method = 'POST';
+    tempForm.action = scriptURL;
+    tempForm.style.display = 'none';
     
-    // Enviar datos al Google Script - USANDO URL ENCODED
-    fetch(scriptURL, {
-        method: 'POST',
-        body: urlEncodedData,
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        mode: 'no-cors' // Importante para evitar problemas CORS
-    })
-    .then(() => {
-        // Con 'no-cors' no podemos leer la respuesta, pero asumimos éxito
-        messageDiv.textContent = '¡Mensaje enviado con éxito! Te contactaremos pronto.';
-        messageDiv.className = 'form-message success';
-        form.reset();
-    })
-    .catch(error => {
-        console.error('Error completo:', error);
-        messageDiv.textContent = 'Hubo un error al enviar el mensaje. Por favor, inténtalo de nuevo.';
-        messageDiv.className = 'form-message error';
-    })
-    .finally(() => {
-        // Restaurar estado del botón
+    // Añadir campos al formulario
+    const fields = ['name', 'email', 'subject', 'message'];
+    fields.forEach(field => {
+        const input = document.createElement('input');
+        input.name = field;
+        input.value = form.querySelector(`[name="${field}"]`).value;
+        tempForm.appendChild(input);
+    });
+    
+    // Añadir formulario al documento y enviar
+    document.body.appendChild(tempForm);
+    tempForm.submit();
+    
+    // Mostrar mensaje de éxito (asumimos que funciona)
+    messageDiv.textContent = '¡Mensaje enviado con éxito! Te contactaremos pronto.';
+    messageDiv.className = 'form-message success';
+    form.reset();
+    
+    // Restaurar estado del botón después de un delay
+    setTimeout(() => {
         submitButton.textContent = originalText;
         submitButton.disabled = false;
+        document.body.removeChild(tempForm);
         
         // Ocultar mensaje después de 8 segundos
         setTimeout(() => {
             messageDiv.textContent = '';
             messageDiv.className = 'form-message';
         }, 8000);
-    });
+    }, 1000);
 });
 
 // Header background on scroll
