@@ -45,7 +45,7 @@ document.getElementById('contact-form').addEventListener('submit', async functio
     try {
         await fetch(scriptURL, {
             method: 'POST',
-            mode: 'no-cors',
+            mode: 'cors',
             body: formData
         });
         
