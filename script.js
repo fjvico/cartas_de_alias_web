@@ -19,12 +19,11 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     });
 });
 
-// Form submission handler - VERSIÓN CORREGIDA
-document.getElementById('contact-form').addEventListener('submit', function(e) {
+// Form submission handler - VERSIÓN MEJORADA
+document.getElementById('contact-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     
     const form = this;
-    const formData = new FormData(form);
     const messageDiv = document.getElementById('form-message');
     
     // Mostrar estado de carga
@@ -33,48 +32,59 @@ document.getElementById('contact-form').addEventListener('submit', function(e) {
     submitButton.textContent = 'Enviando...';
     submitButton.disabled = true;
     
-    // Convertir FormData a objeto JSON
-    const formObject = {};
-    formData.forEach((value, key) => {
-        formObject[key] = value;
-    });
+    // Obtener datos del formulario
+    const formData = {
+        name: form.querySelector('[name="name"]').value,
+        email: form.querySelector('[name="email"]').value,
+        subject: form.querySelector('[name="subject"]').value,
+        message: form.querySelector('[name="message"]').value
+    };
     
-    console.log('Datos a enviar:', formObject);
+    console.log('Enviando datos:', formData);
     
-    // URL de tu Google Script
+    // URL de tu Google Script - ACTUALIZA ESTA URL CON LA NUEVA
     const scriptURL = 'https://script.google.com/macros/s/AKfycbzFtEOuzPw8RlYL0CXGU9nfN8WDIWyC6R4CmQPd0b3f1GtzpuT42V7FTcUl09QdmOk/exec';
     
-    // Enviar datos al Google Script
-    fetch(scriptURL, {
-        method: 'POST',
-        body: JSON.stringify(formObject),
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => {
-        console.log('Respuesta HTTP:', response.status, response.statusText);
+    try {
+        const response = await fetch(scriptURL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        console.log('Respuesta recibida:', response);
+        
         if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
+            throw new Error(`Error HTTP: ${response.status}`);
         }
-        return response.json();
-    })
-    .then(data => {
-        console.log('Respuesta del servidor:', data);
-        if (data.result === 'success') {
+        
+        const data = await response.json();
+        console.log('Datos respuesta:', data);
+        
+        if (data.status === 'success') {
             messageDiv.textContent = '¡Mensaje enviado con éxito! Te contactaremos pronto.';
             messageDiv.className = 'form-message success';
             form.reset();
         } else {
             throw new Error(data.message || 'Error del servidor');
         }
-    })
-    .catch(error => {
+        
+    } catch (error) {
         console.error('Error completo:', error);
-        messageDiv.textContent = `Error: ${error.message}`;
+        
+        // Mensajes de error más específicos
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            messageDiv.textContent = 'Error de conexión. Verifica tu internet o intenta más tarde.';
+        } else if (error.message.includes('CORS')) {
+            messageDiv.textContent = 'Error de configuración del servidor.';
+        } else {
+            messageDiv.textContent = `Error: ${error.message}`;
+        }
+        
         messageDiv.className = 'form-message error';
-    })
-    .finally(() => {
+    } finally {
         submitButton.textContent = originalText;
         submitButton.disabled = false;
         
@@ -82,7 +92,7 @@ document.getElementById('contact-form').addEventListener('submit', function(e) {
             messageDiv.textContent = '';
             messageDiv.className = 'form-message';
         }, 8000);
-    });
+    }
 });
 
 // Header background on scroll
