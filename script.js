@@ -32,31 +32,41 @@ document.getElementById('contact-form').addEventListener('submit', async functio
     submitButton.textContent = 'Enviando...';
     submitButton.disabled = true;
     
-    // Obtener datos del formulario
-    const formData = new FormData();
-    formData.append('name', form.querySelector('[name="name"]').value);
-    formData.append('email', form.querySelector('[name="email"]').value);
-    formData.append('subject', form.querySelector('[name="subject"]').value);
-    formData.append('message', form.querySelector('[name="message"]').value);
+    // Obtener datos del formulario como objeto JSON
+    const data = {
+        name: form.querySelector('[name="name"]').value,
+        email: form.querySelector('[name="email"]').value,
+        subject: form.querySelector('[name="subject"]').value,
+        message: form.querySelector('[name="message"]').value
+    };
     
     // URL de Google Apps Script
     const scriptURL = 'https://script.google.com/macros/s/AKfycbzbZZIQlGwaOjRWs0tYPSCazXIgdGrtnExTmVjvVqdpuTpxGk8DM8_uM8r2NU8K6lI/exec';
     
     try {
-        await fetch(scriptURL, {
+        const response = await fetch(scriptURL, {
             method: 'POST',
-            mode: 'no-cors',
-            body: formData
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
         });
         
-        // Éxito
-        messageDiv.textContent = '¡Mensaje enviado con éxito! Te contactaremos pronto.';
-        messageDiv.className = 'form-message success';
-        form.reset();
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            messageDiv.textContent = '¡Mensaje enviado con éxito! Te contactaremos pronto.';
+            messageDiv.className = 'form-message success';
+            form.reset();
+        } else {
+            throw new Error(result.message || 'Error desconocido');
+        }
         
     } catch (error) {
         // Error
-        messageDiv.textContent = 'Hubo un error al enviar el mensaje. Por favor, intenta de nuevo.';
+        console.error('Error:', error);
+        messageDiv.textContent = 'Hubo un error al enviar el mensaje: ' + error.message;
         messageDiv.className = 'form-message error';
     } finally {
         submitButton.textContent = originalText;
