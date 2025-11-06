@@ -1,3 +1,5 @@
+var ENVIAR_EMAIL = false; // true/false para activar/desactivar envíos
+
 function doPost(e) {
   try {
     Logger.log('=== INICIO doPost ===');
@@ -45,29 +47,34 @@ function doPost(e) {
     
     Logger.log('✓ Guardado en fila: ' + lastRow);
     
-    // Enviar email
-    try {
-      var emailBody = "Nuevo contacto de Cartas de Alias\n\n" +
-                     "Fecha: " + timestamp + "\n" +
-                     "Nombre: " + params.name + "\n" +
-                     "Email: " + params.email + "\n" +
-                     "Asunto: " + params.subject + "\n\n" +
-                     "Mensaje:\n" + params.message;
-      
-      MailApp.sendEmail({
-        to: "fjvico@uma.es",
-        subject: "Nuevo contacto - Cartas de Alias",
-        body: emailBody
-      });
-      Logger.log('✓ Email enviado');
-    } catch (emailError) {
-      Logger.log('⚠ Error al enviar email: ' + emailError);
+    // Enviar email SOLO SI LA VARIABLE GLOBAL ESTÁ ACTIVADA
+    if (ENVIAR_EMAIL) {
+      try {
+        var emailBody = "Nuevo contacto de Cartas de Alias\n\n" +
+                       "Fecha: " + timestamp + "\n" +
+                       "Nombre: " + params.name + "\n" +
+                       "Email: " + params.email + "\n" +
+                       "Asunto: " + params.subject + "\n\n" +
+                       "Mensaje:\n" + params.message;
+        
+        MailApp.sendEmail({
+          to: "fjvico@uma.es",
+          subject: "Nuevo contacto - Cartas de Alias",
+          body: emailBody
+        });
+        Logger.log('✓ Email enviado');
+      } catch (emailError) {
+        Logger.log('⚠ Error al enviar email: ' + emailError);
+      }
+    } else {
+      Logger.log('Envío de email desactivado.');
     }
     
     return ContentService
       .createTextOutput(JSON.stringify({
         status: 'success',
-        row: lastRow
+        row: lastRow,
+        emailEnviado: ENVIAR_EMAIL
       }))
       .setMimeType(ContentService.MimeType.JSON);
     
@@ -88,9 +95,33 @@ function doGet(e) {
   return ContentService
     .createTextOutput(JSON.stringify({
       status: 'ok',
-      message: 'Servicio activo'
+      message: 'Servicio activo',
+      emailActivo: ENVIAR_EMAIL
     }))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+// Función para cambiar el estado del envío de emails
+function cambiarEstadoEmail(estado) {
+  ENVIAR_EMAIL = estado;
+  Logger.log('Estado de envío de emails cambiado a: ' + estado);
+  return ENVIAR_EMAIL;
+}
+
+// Función para desactivar emails
+function desactivarEmails() {
+  return cambiarEstadoEmail(false);
+}
+
+// Función para activar emails
+function activarEmails() {
+  return cambiarEstadoEmail(true);
+}
+
+// Función para ver estado actual
+function verEstadoEmail() {
+  Logger.log('Estado actual de envío de emails: ' + ENVIAR_EMAIL);
+  return ENVIAR_EMAIL;
 }
 
 // Función de prueba
